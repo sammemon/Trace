@@ -146,6 +146,7 @@ model CampusLocation {
   items                 Item[]
   createdAt             DateTime @default(now()) @map("created_at")
 
+  @@unique([name, type])
   @@map("campus_locations")
 }
 

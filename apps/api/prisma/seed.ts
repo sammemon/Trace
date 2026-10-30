@@ -1,14 +1,16 @@
 import { PrismaClient, Role } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const passwordHash = await argon2.hash('TraceAdmin!2026', { type: argon2.argon2id });
   await prisma.user.upsert({
     where: { email: 'admin@admin.muet.edu.pk' },
     update: {},
     create: {
       email: 'admin@admin.muet.edu.pk',
-      passwordHash: 'seed-only-replace-before-use',
+      passwordHash,
       fullName: 'TRACE Administrator',
       department: 'Administration',
       batchYear: 2020,
@@ -32,14 +34,13 @@ async function main() {
     });
   }
 
-  await prisma.campusLocation.createMany({
-    data: [
-      { name: 'Main Library Desk', type: 'LIBRARY', lat: 24.8607, lng: 67.0011, isSafeHandoverPoint: true },
-      { name: 'Campus Security Office', type: 'SECURITY', lat: 24.8612, lng: 67.0018, isSafeHandoverPoint: true },
-      { name: 'Student Cafeteria Entrance', type: 'CAFETERIA', lat: 24.8599, lng: 67.0006, isSafeHandoverPoint: true }
-    ],
-    skipDuplicates: true
-  });
+  for (const location of [
+    { name: 'Main Library Desk', type: 'LIBRARY', lat: 24.8607, lng: 67.0011, isSafeHandoverPoint: true },
+    { name: 'Campus Security Office', type: 'SECURITY', lat: 24.8612, lng: 67.0018, isSafeHandoverPoint: true },
+    { name: 'Student Cafeteria Entrance', type: 'CAFETERIA', lat: 24.8599, lng: 67.0006, isSafeHandoverPoint: true }
+  ]) {
+    await prisma.campusLocation.upsert({ where: { name_type: { name: location.name, type: location.type } }, update: location, create: location });
+  }
 }
 
 main().finally(() => prisma.$disconnect());

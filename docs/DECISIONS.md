@@ -17,3 +17,6 @@ The mobile-style and moderation surfaces remain separate workspace applications 
 
 ## 2026-10-31: Phase 2 authentication defaults
 Passwords use Argon2id, access tokens expire after 15 minutes, refresh tokens are hashed and rotated for 30 days, and verification/reset codes are hashed with a ten-minute lifetime and five-attempt limit. Development exposes generated OTPs only through the local API response; production requires the email delivery worker.
+
+## 2026-10-31: Seed and local runtime readiness
+The admin seed account uses an Argon2id hash and campus locations use a compound unique key so repeated seeds are safe. The API explicitly loads `.env`; live migration and seed verification remain pending until Docker Desktop is installed on the development machine.
