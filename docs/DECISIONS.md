@@ -14,3 +14,6 @@ The repository pins pnpm 9.15.0 and TypeScript 5.9-compatible settings. The edit
 
 ## 2026-10-31: Responsive web-first clients
 The mobile-style and moderation surfaces remain separate workspace applications so the API contract can support both responsive web delivery and a future Expo client without coupling their build systems.
+
+## 2026-10-31: Phase 2 authentication defaults
+Passwords use Argon2id, access tokens expire after 15 minutes, refresh tokens are hashed and rotated for 30 days, and verification/reset codes are hashed with a ten-minute lifetime and five-attempt limit. Development exposes generated OTPs only through the local API response; production requires the email delivery worker.
