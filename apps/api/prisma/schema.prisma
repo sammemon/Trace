@@ -60,12 +60,31 @@ model User {
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
   deletedAt       DateTime?  @map("deleted_at")
+  avatarUrl       String?    @map("avatar_url")
+  bio             String?
+  notificationPrefs Json      @default("{}") @map("notification_prefs")
+  quietHours      Json?      @map("quiet_hours")
+  locale          String     @default("en")
   items           Item[]
   otpCodes        OtpCode[]
   refreshTokens   RefreshToken[]
+  deviceTokens    DeviceToken[]
 
   @@index([studentIdHash])
   @@map("users")
+}
+
+model DeviceToken {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  expoPushToken  String   @unique @map("expo_push_token")
+  platform       String
+  appVersion     String?  @map("app_version")
+  lastActiveAt   DateTime @default(now()) @map("last_active_at")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_tokens")
 }
 
 model RefreshToken {

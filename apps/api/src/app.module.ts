@@ -4,6 +4,9 @@ import { PrismaService } from './prisma.service';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+import { RolesGuard } from './roles.guard';
 
-@Module({ controllers: [HealthController, AuthController], providers: [PrismaService, AuthService, AuthGuard] })
+@Module({ controllers: [HealthController, AuthController, UsersController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard] })
 export class AppModule {}
