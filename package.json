@@ -1,0 +1,21 @@
+{
+  "name": "trace-campusfind",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:migrate": "pnpm --filter @trace/api prisma:migrate",
+    "db:seed": "pnpm --filter @trace/api prisma:seed",
+    "db:generate": "pnpm --filter @trace/api prisma:generate",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3"
+  }
+}

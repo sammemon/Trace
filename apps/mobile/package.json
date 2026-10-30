@@ -1,0 +1,7 @@
+{
+  "name": "@trace/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "build": "tsc --noEmit", "dev": "expo start", "lint": "tsc --noEmit", "typecheck": "tsc --noEmit", "test": "jest --passWithNoTests" },
+  "devDependencies": { "jest": "^29.7.0", "typescript": "^5.7.3" }
+}

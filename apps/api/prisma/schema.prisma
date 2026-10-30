@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum ItemType {
+  LOST
+  FOUND
+}
+
+enum ItemStatus {
+  ACTIVE
+  CLAIM_PENDING
+  RETURNED
+  RESOLVED
+  EXPIRED
+  REMOVED
+}
+
+enum ModerationStatus {
+  VISIBLE
+  PENDING_REVIEW
+  HIDDEN
+}
+
+enum OtpPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  fullName        String     @map("full_name")
+  department      String
+  batchYear       Int        @map("batch_year")
+  studentIdHash   String?    @map("student_id_hash")
+  role            Role       @default(STUDENT)
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  trustScore      Int        @default(50) @map("trust_score")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
+  items           Item[]
+  otpCodes        OtpCode[]
+
+  @@index([studentIdHash])
+  @@map("users")
+}
+
+model OtpCode {
+  id         String     @id @default(uuid()) @db.Uuid
+  email      String
+  codeHash   String     @map("code_hash")
+  purpose    OtpPurpose
+  expiresAt  DateTime   @map("expires_at")
+  attempts   Int        @default(0)
+  consumedAt DateTime?  @map("consumed_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  userId     String?    @map("user_id") @db.Uuid
+  user       User?      @relation(fields: [userId], references: [id])
+
+  @@index([email, purpose, expiresAt])
+  @@map("otp_codes")
+}
+
+model Category {
+  id                     String   @id @default(uuid()) @db.Uuid
+  name                   String
+  slug                   String   @unique
+  icon                   String
+  isSensitive            Boolean  @default(false) @map("is_sensitive")
+  verificationTemplates Json     @default("[]") @map("verification_templates")
+  sortOrder              Int      @default(0) @map("sort_order")
+  isActive               Boolean  @default(true) @map("is_active")
+  items                  Item[]
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+model CampusLocation {
+  id                    String   @id @default(uuid()) @db.Uuid
+  name                  String
+  type                  String
+  lat                   Decimal  @db.Decimal(9, 6)
+  lng                   Decimal  @db.Decimal(9, 6)
+  description           String?
+  isSafeHandoverPoint   Boolean  @default(false) @map("is_safe_handover_point")
+  isActive              Boolean  @default(true) @map("is_active")
+  sortOrder             Int      @default(0) @map("sort_order")
+  items                 Item[]
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("campus_locations")
+}
+
+model Item {
+  id                 String           @id @default(uuid()) @db.Uuid
+  type               ItemType
+  title              String
+  description        String
+  categoryId         String           @map("category_id") @db.Uuid
+  color              String?
+  brand              String?
+  tags               String[]
+  locationId         String           @map("location_id") @db.Uuid
+  locationNote       String?          @map("location_note")
+  occurredAt         DateTime         @map("occurred_at")
+  isTimeApproximate  Boolean          @default(false) @map("is_time_approximate")
+  status             ItemStatus       @default(ACTIVE)
+  moderationStatus   ModerationStatus @default(VISIBLE) @map("moderation_status")
+  handoverMode       String?          @map("handover_mode")
+  privateDetailsEnc  String?          @map("private_details_enc")
+  idNumberHash       String?          @map("id_number_hash")
+  viewCount          Int              @default(0) @map("view_count")
+  expiresAt          DateTime         @map("expires_at")
+  resolvedAt         DateTime?        @map("resolved_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  reporterId         String           @map("reporter_id") @db.Uuid
+  reporter           User             @relation(fields: [reporterId], references: [id])
+  category           Category         @relation(fields: [categoryId], references: [id])
+  location           CampusLocation   @relation(fields: [locationId], references: [id])
+
+  @@index([status, moderationStatus, createdAt])
+  @@index([categoryId])
+  @@map("items")
+}
