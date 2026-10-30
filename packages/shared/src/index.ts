@@ -62,11 +62,36 @@ export const notificationPreferencesSchema = z.object({
   quietHoursEnd: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional()
 });
 
+export const createItemSchema = z.object({
+  type: itemTypeSchema,
+  title: z.string().trim().min(3).max(80),
+  description: z.string().trim().min(3).max(1000),
+  categoryId: z.string().uuid(),
+  locationId: z.string().uuid(),
+  color: z.string().trim().max(40).optional(),
+  brand: z.string().trim().max(80).optional(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).default([]),
+  locationNote: z.string().trim().max(240).optional(),
+  occurredAt: z.coerce.date().refine((date) => date <= new Date(), 'Date cannot be in the future'),
+  isTimeApproximate: z.boolean().default(false)
+});
+
+export const itemQuerySchema = z.object({
+  type: itemTypeSchema.optional(),
+  categoryId: z.string().uuid().optional(),
+  locationId: z.string().uuid().optional(),
+  status: itemStatusSchema.default('ACTIVE'),
+  search: z.string().trim().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().uuid().optional()
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;
 export type OtpPurpose = z.infer<typeof otpPurposeSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type CreateItemInput = z.infer<typeof createItemSchema>;
 
 export const apiSuccess = <T>(data: T, meta?: Record<string, unknown>) => ({ data, ...(meta ? { meta } : {}) });
