@@ -88,6 +88,12 @@ export const itemQuerySchema = z.object({
   cursor: z.string().uuid().optional()
 });
 
+export const savedSearchSchema = z.object({
+  query: z.string().trim().max(100).default(''),
+  filters: itemQuerySchema.partial().default({}),
+  notify: z.boolean().default(true)
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;

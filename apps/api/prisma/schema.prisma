@@ -70,6 +70,7 @@ model User {
   refreshTokens   RefreshToken[]
   deviceTokens    DeviceToken[]
   bookmarks       Bookmark[]
+  savedSearches   SavedSearch[]
 
   @@index([studentIdHash])
   @@map("users")
@@ -195,4 +196,19 @@ model Bookmark {
 
   @@id([userId, itemId])
   @@map("bookmarks")
+}
+
+model SavedSearch {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  query           String
+  filters         Json     @default("{}")
+  notify          Boolean  @default(true)
+  lastNotifiedAt  DateTime? @map("last_notified_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("saved_searches")
 }
