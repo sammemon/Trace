@@ -21,6 +21,8 @@ import { NotificationsService } from './notifications.service';
 import { ChatGateway } from './chat.gateway';
 import { AdminReportsController, ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { JobsService } from './jobs.service';
 
-@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService] })
+@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService] })
 export class AppModule {}
