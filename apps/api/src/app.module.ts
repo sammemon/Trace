@@ -12,6 +12,8 @@ import { ItemsController } from './items.controller';
 import { ItemsService } from './items.service';
 import { SavedSearchesController } from './saved-searches.controller';
 import { SavedSearchesService } from './saved-searches.service';
+import { ClaimsController } from './claims.controller';
+import { ClaimsService } from './claims.service';
 
-@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService] })
+@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService] })
 export class AppModule {}

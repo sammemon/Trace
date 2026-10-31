@@ -45,6 +45,16 @@ enum OtpPurpose {
   RESET_PASSWORD
 }
 
+enum ClaimStatus {
+  PENDING
+  MORE_INFO_REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+  COMPLETED
+}
+
 model User {
   id              String     @id @default(uuid()) @db.Uuid
   email           String     @unique
@@ -71,6 +81,7 @@ model User {
   deviceTokens    DeviceToken[]
   bookmarks       Bookmark[]
   savedSearches   SavedSearch[]
+  claims          Claim[]
 
   @@index([studentIdHash])
   @@map("users")
@@ -181,6 +192,8 @@ model Item {
   category           Category         @relation(fields: [categoryId], references: [id])
   location           CampusLocation   @relation(fields: [locationId], references: [id])
   bookmarks          Bookmark[]
+  verificationQuestions Json?       @map("verification_questions")
+  claims              Claim[]
 
   @@index([status, moderationStatus, createdAt])
   @@index([categoryId])
@@ -211,4 +224,37 @@ model SavedSearch {
 
   @@index([userId, createdAt])
   @@map("saved_searches")
+}
+
+model Claim {
+  id            String      @id @default(uuid()) @db.Uuid
+  itemId        String      @map("item_id") @db.Uuid
+  claimantId    String      @map("claimant_id") @db.Uuid
+  status        ClaimStatus @default(PENDING)
+  message       String
+  decisionNote  String?     @map("decision_note")
+  rejectionReason String?   @map("rejection_reason")
+  decidedAt     DateTime?   @map("decided_at")
+  expiresAt     DateTime    @map("expires_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  item          Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  claimant      User       @relation(fields: [claimantId], references: [id], onDelete: Cascade)
+  answers       ClaimAnswer[]
+
+  @@unique([itemId, claimantId])
+  @@index([itemId, status])
+  @@index([claimantId, createdAt])
+  @@map("claims")
+}
+
+model ClaimAnswer {
+  id         String   @id @default(uuid()) @db.Uuid
+  claimId    String   @map("claim_id") @db.Uuid
+  question   String
+  answer     String
+  createdAt  DateTime @default(now()) @map("created_at")
+  claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("claim_answers")
 }

@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const roleSchema = z.enum(['STUDENT', 'MODERATOR', 'ADMIN']);
 export const itemTypeSchema = z.enum(['LOST', 'FOUND']);
 export const itemStatusSchema = z.enum(['ACTIVE', 'CLAIM_PENDING', 'RETURNED', 'RESOLVED', 'EXPIRED', 'REMOVED']);
+export const claimStatusSchema = z.enum(['PENDING', 'MORE_INFO_REQUESTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED', 'COMPLETED']);
 export const otpPurposeSchema = z.enum(['VERIFY_EMAIL', 'RESET_PASSWORD']);
 
 export const registerSchema = z.object({
@@ -94,9 +95,19 @@ export const savedSearchSchema = z.object({
   notify: z.boolean().default(true)
 });
 
+export const createClaimSchema = z.object({
+  message: z.string().trim().min(1).max(500),
+  answers: z.array(z.object({ question: z.string().trim().min(1).max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(3)
+});
+
+export const rejectClaimSchema = z.object({
+  reason: z.enum(['ANSWER_UNCLEAR', 'NOT_ENOUGH_PROOF', 'INCORRECT_ITEM', 'OTHER'])
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;
+export type ClaimStatus = z.infer<typeof claimStatusSchema>;
 export type OtpPurpose = z.infer<typeof otpPurposeSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
