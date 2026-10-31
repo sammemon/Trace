@@ -26,4 +26,10 @@ export class ClaimsController {
 
   @Post('claims/:claimId/reject')
   async reject(@Req() request: AuthenticatedRequest, @Param('claimId') claimId: string, @Body() body: unknown) { return apiSuccess(await this.claimsService.reject(request.user!.id, claimId, body)); }
+
+  @Post('claims/:claimId/handover-code')
+  async handoverCode(@Req() request: AuthenticatedRequest, @Param('claimId') claimId: string) { return apiSuccess(await this.claimsService.generateHandoverCode(request.user!.id, claimId)); }
+
+  @Post('claims/:claimId/complete')
+  async complete(@Req() request: AuthenticatedRequest, @Param('claimId') claimId: string, @Body() body: unknown) { return apiSuccess(await this.claimsService.complete(request.user!.id, claimId, body)); }
 }

@@ -104,6 +104,10 @@ export const rejectClaimSchema = z.object({
   reason: z.enum(['ANSWER_UNCLEAR', 'NOT_ENOUGH_PROOF', 'INCORRECT_ITEM', 'OTHER'])
 });
 
+export const handoverCodeSchema = z.object({
+  code: z.string().regex(/^\d{6}$/)
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;

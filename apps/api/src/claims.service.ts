@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { createClaimSchema, rejectClaimSchema } from '@trace/shared';
+import { createClaimSchema, handoverCodeSchema, rejectClaimSchema } from '@trace/shared';
 import { PrismaService } from './prisma.service';
+import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 
 @Injectable()
 export class ClaimsService {
@@ -51,6 +52,43 @@ export class ClaimsService {
     if (!['PENDING', 'MORE_INFO_REQUESTED'].includes(claim.status)) throw new BadRequestException('Claim is no longer pending');
     const updated = await this.prisma.claim.update({ where: { id: claimId }, data: { status: 'REJECTED', rejectionReason: data.reason, decidedAt: new Date() }, include: { answers: true, item: { select: { id: true, title: true, type: true } } } });
     return this.toClaimantView(updated);
+  }
+
+  async generateHandoverCode(claimantId: string, claimId: string) {
+    const claim = await this.prisma.claim.findUnique({ where: { id: claimId } });
+    if (!claim) throw new NotFoundException('Claim not found');
+    if (claim.claimantId !== claimantId) throw new ForbiddenException('Only the claimant can generate this code');
+    if (claim.status !== 'APPROVED') throw new BadRequestException('Claim must be approved before handover');
+    const code = randomInt(100000, 1000000).toString();
+    await this.prisma.claim.update({ where: { id: claimId }, data: { handoverCodeHash: this.hash(code), handoverCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), handoverAttempts: 0, handoverLockedUntil: null } });
+    return { code, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) };
+  }
+
+  async complete(finderId: string, claimId: string, input: unknown) {
+    const { code } = handoverCodeSchema.parse(input);
+    const claim = await this.prisma.claim.findUnique({ where: { id: claimId }, include: { item: true } });
+    if (!claim) throw new NotFoundException('Claim not found');
+    if (claim.item.reporterId !== finderId) throw new ForbiddenException('Only the finder can complete handover');
+    if (claim.status !== 'APPROVED') throw new BadRequestException('Claim is not ready for handover');
+    if (claim.handoverLockedUntil && claim.handoverLockedUntil > new Date()) throw new BadRequestException('Handover verification is temporarily locked');
+    if (!claim.handoverCodeHash || !claim.handoverCodeExpiresAt || claim.handoverCodeExpiresAt <= new Date()) throw new BadRequestException('Handover code is expired');
+    if (!this.constantTimeEqual(claim.handoverCodeHash, this.hash(code))) {
+      const attempts = claim.handoverAttempts + 1;
+      await this.prisma.claim.update({ where: { id: claimId }, data: { handoverAttempts: attempts, ...(attempts >= 5 ? { handoverLockedUntil: new Date(Date.now() + 15 * 60 * 1000) } : {}) } });
+      throw new BadRequestException('Handover code is incorrect');
+    }
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.claim.update({ where: { id: claimId }, data: { status: 'COMPLETED', completedAt: new Date() } });
+      await transaction.item.update({ where: { id: claim.itemId }, data: { status: 'RETURNED', resolvedAt: new Date() } });
+    });
+    return { success: true, status: 'COMPLETED' };
+  }
+
+  private hash(value: string) { return createHash('sha256').update(value).digest('hex'); }
+
+  private constantTimeEqual(left: string, right: string) {
+    const leftBuffer = Buffer.from(left); const rightBuffer = Buffer.from(right);
+    return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
   }
 
   private toClaimantView(claim: any) {

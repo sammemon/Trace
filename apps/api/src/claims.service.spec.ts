@@ -39,4 +39,27 @@ describe('ClaimsService', () => {
     expect(prisma.item.update).toHaveBeenCalledWith({ where: { id: 'item-1' }, data: { status: 'CLAIM_PENDING' } });
     expect(prisma.claim.update).toHaveBeenCalled();
   });
+
+  it('only lets the claimant generate a handover code', async () => {
+    prisma.claim.findUnique.mockResolvedValue({ id: 'claim-1', claimantId: 'claimant-1', status: 'APPROVED' });
+    await expect(service.generateHandoverCode('other-user', 'claim-1')).rejects.toThrow('Only the claimant');
+    expect(prisma.claim.update).not.toHaveBeenCalled();
+  });
+
+  it('locks handover verification after five incorrect codes', async () => {
+    prisma.claim.findUnique.mockResolvedValue({ id: 'claim-1', claimantId: 'claimant-1', status: 'APPROVED', handoverCodeHash: 'expected', handoverCodeExpiresAt: new Date(Date.now() + 60_000), handoverAttempts: 4, item: { reporterId: 'finder-1', id: 'item-1' } });
+    await expect(service.complete('finder-1', 'claim-1', { code: '123456' })).rejects.toThrow('incorrect');
+    expect(prisma.claim.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ handoverAttempts: 5, handoverLockedUntil: expect.any(Date) }) }));
+  });
+
+  it('completes the claim and returns the item with the correct code', async () => {
+    const code = '123456';
+    const hash = require('node:crypto').createHash('sha256').update(code).digest('hex');
+    prisma.claim.findUnique.mockResolvedValue({ id: 'claim-1', claimantId: 'claimant-1', status: 'APPROVED', handoverCodeHash: hash, handoverCodeExpiresAt: new Date(Date.now() + 60_000), handoverAttempts: 0, item: { reporterId: 'finder-1', id: 'item-1' } });
+    prisma.$transaction.mockImplementation(async (callback: (transaction: typeof prisma) => unknown) => callback(prisma));
+
+    await expect(service.complete('finder-1', 'claim-1', { code })).resolves.toEqual({ success: true, status: 'COMPLETED' });
+    expect(prisma.claim.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'COMPLETED' }) }));
+    expect(prisma.item.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'RETURNED' }) }));
+  });
 });

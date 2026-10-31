@@ -241,6 +241,11 @@ model Claim {
   item          Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
   claimant      User       @relation(fields: [claimantId], references: [id], onDelete: Cascade)
   answers       ClaimAnswer[]
+  handoverCodeHash String?    @map("handover_code_hash")
+  handoverCodeExpiresAt DateTime? @map("handover_code_expires_at")
+  handoverAttempts Int        @default(0) @map("handover_attempts")
+  handoverLockedUntil DateTime? @map("handover_locked_until")
+  completedAt   DateTime?      @map("completed_at")
 
   @@unique([itemId, claimantId])
   @@index([itemId, status])
