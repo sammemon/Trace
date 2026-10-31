@@ -69,6 +69,7 @@ model User {
   otpCodes        OtpCode[]
   refreshTokens   RefreshToken[]
   deviceTokens    DeviceToken[]
+  bookmarks       Bookmark[]
 
   @@index([studentIdHash])
   @@map("users")
@@ -173,12 +174,25 @@ model Item {
   resolvedAt         DateTime?        @map("resolved_at")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
+  lastRenewedAt      DateTime?        @map("last_renewed_at")
   reporterId         String           @map("reporter_id") @db.Uuid
   reporter           User             @relation(fields: [reporterId], references: [id])
   category           Category         @relation(fields: [categoryId], references: [id])
   location           CampusLocation   @relation(fields: [locationId], references: [id])
+  bookmarks          Bookmark[]
 
   @@index([status, moderationStatus, createdAt])
   @@index([categoryId])
   @@map("items")
+}
+
+model Bookmark {
+  userId    String   @map("user_id") @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([userId, itemId])
+  @@map("bookmarks")
 }

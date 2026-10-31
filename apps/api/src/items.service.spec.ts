@@ -4,7 +4,8 @@ describe('ItemsService', () => {
   const prisma = {
     category: { findFirst: jest.fn() },
     campusLocation: { findFirst: jest.fn() },
-    item: { create: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() }
+    item: { create: jest.fn(), findMany: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
+    bookmark: { upsert: jest.fn(), deleteMany: jest.fn(), findMany: jest.fn() }
   };
   let service: ItemsService;
 
@@ -31,5 +32,19 @@ describe('ItemsService', () => {
 
     expect(result).not.toHaveProperty('privateDetailsEnc');
     expect(result.title).toBe('Blue wallet');
+  });
+
+  it('blocks a different user from changing an item', async () => {
+    prisma.item.findFirst.mockResolvedValue({ id: 'item-1', reporterId: 'owner-1', status: 'ACTIVE' });
+
+    await expect(service.update('other-user', 'item-1', { title: 'Changed title' })).rejects.toThrow('Only the item owner');
+    expect(prisma.item.update).not.toHaveBeenCalled();
+  });
+
+  it('only resolves active or claim-pending items', async () => {
+    prisma.item.findFirst.mockResolvedValue({ id: 'item-1', reporterId: 'owner-1', status: 'RETURNED' });
+
+    await expect(service.resolve('owner-1', 'item-1')).rejects.toThrow('Only active items');
+    expect(prisma.item.update).not.toHaveBeenCalled();
   });
 });

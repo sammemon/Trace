@@ -76,6 +76,8 @@ export const createItemSchema = z.object({
   isTimeApproximate: z.boolean().default(false)
 });
 
+export const updateItemSchema = createItemSchema.partial();
+
 export const itemQuerySchema = z.object({
   type: itemTypeSchema.optional(),
   categoryId: z.string().uuid().optional(),
