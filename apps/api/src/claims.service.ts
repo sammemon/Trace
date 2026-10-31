@@ -39,6 +39,11 @@ export class ClaimsService {
       const current = await transaction.claim.findUnique({ where: { id: claimId } });
       if (!current || !['PENDING', 'MORE_INFO_REQUESTED'].includes(current.status)) throw new BadRequestException('Claim is no longer pending');
       await transaction.item.update({ where: { id: claim.itemId }, data: { status: 'CLAIM_PENDING' } });
+      await transaction.conversation.upsert({
+        where: { claimId },
+        create: { claimId, itemId: claim.itemId, userAId: claim.item.reporterId, userBId: claim.claimantId },
+        update: { status: 'OPEN' }
+      });
       return transaction.claim.update({ where: { id: claimId }, data: { status: 'APPROVED', decidedAt: new Date() }, include: { answers: true, item: { select: { id: true, title: true, type: true } } } });
     });
     return this.toClaimantView(updated);

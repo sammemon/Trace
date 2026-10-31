@@ -1,5 +1,6 @@
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { io } from 'socket.io-client';
 import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
@@ -8,6 +9,8 @@ type User = { id: string; fullName: string; email: string; department: string; b
 type Item = { id: string; type: 'LOST' | 'FOUND'; title: string; description: string; category?: { name: string }; location?: { name: string }; postedBy?: { id: string; fullName: string } };
 type Search = { id: string; query: string; notify: boolean };
 type Claim = { id: string; status: string; message: string; answers: { question: string; answer: string }[]; item?: { id: string; title: string; type: string; status?: string }; claimant?: { fullName: string; department: string; trustScore: number } };
+type Conversation = { id: string; claim: { id: string; status: string; item: { id: string; title: string } } };
+type Message = { id: string; body: string; senderId: string; createdAt: string };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) } });
@@ -21,6 +24,11 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [messageBody, setMessageBody] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const [searches, setSearches] = useState<Search[]>([]);
   const [filter, setFilter] = useState<'' | 'LOST' | 'FOUND'>('');
   const [query, setQuery] = useState('');
@@ -42,7 +50,12 @@ function App() {
     finally { setFeedLoading(false); }
   }
   async function loadClaims() { try { setClaims(await request<Claim[]>('/claims/mine', { headers: auth() })); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Claims unavailable'); } }
-  async function loadAccount(accessToken: string) { const profile = await request<User>('/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } }); setUser(profile); setOffline(false); const saved = await request<Search[]>('/saved-searches', { headers: auth() }); setSearches(saved); await Promise.all([loadFeed(), loadClaims()]); }
+  async function loadCommunication() { const [conversationList, unread] = await Promise.all([request<Conversation[]>('/conversations', { headers: auth() }), request<{ count: number }>('/notifications/unread-count', { headers: auth() })]); setConversations(conversationList); setNotificationCount(unread.count); }
+  async function openConversation(conversation: Conversation) { setActiveConversation(conversation); setMessages(await request<Message[]>(`/conversations/${conversation.id}/messages`, { headers: auth() })); }
+  async function sendMessage(event: React.FormEvent) { event.preventDefault(); if (!activeConversation || !messageBody.trim()) return; const message = await request<Message>(`/conversations/${activeConversation.id}/messages`, { method: 'POST', headers: auth(), body: JSON.stringify({ body: messageBody }) }); setMessages((current) => [...current, message]); setMessageBody(''); }
+  async function loadAccount(accessToken: string) { const profile = await request<User>('/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } }); setUser(profile); setOffline(false); const saved = await request<Search[]>('/saved-searches', { headers: auth() }); setSearches(saved); await Promise.all([loadFeed(), loadClaims(), loadCommunication()]); }
+
+  useEffect(() => { if (!user) return; const socket = io(`${API_URL.replace('/api/v1', '')}/realtime`, { auth: { token: token() } }); socket.on('message:new', (message: Message) => { setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]); setNotificationCount((count) => count + 1); }); return () => { socket.disconnect(); }; }, [user]);
 
   useEffect(() => { const stored = token(); if (stored) loadAccount(stored).catch(() => localStorage.removeItem('trace.accessToken')); const onOnline = () => setOffline(false); const onOffline = () => setOffline(true); window.addEventListener('online', onOnline); window.addEventListener('offline', onOffline); return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); }; }, []);
 

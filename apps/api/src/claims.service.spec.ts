@@ -4,7 +4,8 @@ describe('ClaimsService', () => {
   const prisma = {
     item: { findFirst: jest.fn(), update: jest.fn() },
     claim: { findUnique: jest.fn(), create: jest.fn(), findMany: jest.fn(), update: jest.fn() },
-    $transaction: jest.fn()
+    $transaction: jest.fn(),
+    conversation: { upsert: jest.fn() }
   };
   const service = new ClaimsService(prisma as never);
 
