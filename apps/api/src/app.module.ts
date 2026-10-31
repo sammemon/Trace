@@ -14,6 +14,10 @@ import { SavedSearchesController } from './saved-searches.controller';
 import { SavedSearchesService } from './saved-searches.service';
 import { ClaimsController } from './claims.controller';
 import { ClaimsService } from './claims.service';
+import { ChatController } from './chat.controller';
+import { ChatService } from './chat.service';
+import { NotificationsController } from './notifications.controller';
+import { NotificationsService } from './notifications.service';
 
-@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService] })
+@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService] })
 export class AppModule {}

@@ -108,6 +108,10 @@ export const handoverCodeSchema = z.object({
   code: z.string().regex(/^\d{6}$/)
 });
 
+export const messageSchema = z.object({
+  body: z.string().trim().min(1).max(2000)
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;

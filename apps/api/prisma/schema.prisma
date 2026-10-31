@@ -55,6 +55,17 @@ enum ClaimStatus {
   COMPLETED
 }
 
+enum ConversationStatus {
+  OPEN
+  READ_ONLY
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+}
+
 model User {
   id              String     @id @default(uuid()) @db.Uuid
   email           String     @unique
@@ -82,6 +93,10 @@ model User {
   bookmarks       Bookmark[]
   savedSearches   SavedSearch[]
   claims          Claim[]
+  conversationsA  Conversation[] @relation("conversationUserA")
+  conversationsB  Conversation[] @relation("conversationUserB")
+  messages        Message[]
+  notifications   Notification[]
 
   @@index([studentIdHash])
   @@map("users")
@@ -241,6 +256,7 @@ model Claim {
   item          Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
   claimant      User       @relation(fields: [claimantId], references: [id], onDelete: Cascade)
   answers       ClaimAnswer[]
+  conversation Conversation?
   handoverCodeHash String?    @map("handover_code_hash")
   handoverCodeExpiresAt DateTime? @map("handover_code_expires_at")
   handoverAttempts Int        @default(0) @map("handover_attempts")
@@ -262,4 +278,52 @@ model ClaimAnswer {
   claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
   @@map("claim_answers")
+}
+
+model Conversation {
+  id        String             @id @default(uuid()) @db.Uuid
+  claimId   String             @unique @map("claim_id") @db.Uuid
+  itemId    String             @map("item_id") @db.Uuid
+  userAId   String             @map("user_a_id") @db.Uuid
+  userBId   String             @map("user_b_id") @db.Uuid
+  status    ConversationStatus @default(OPEN)
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+  claim     Claim              @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  userA     User               @relation("conversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User               @relation("conversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([userAId, updatedAt])
+  @@index([userBId, updatedAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String         @id @default(uuid()) @db.Uuid
+  conversationId String         @map("conversation_id") @db.Uuid
+  senderId       String         @map("sender_id") @db.Uuid
+  type           MessageType    @default(TEXT)
+  body           String
+  createdAt      DateTime       @default(now()) @map("created_at")
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String
+  title     String
+  body      String
+  data      Json     @default("{}")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
