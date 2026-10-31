@@ -10,6 +10,8 @@ import { RolesGuard } from './roles.guard';
 import { ReferenceController } from './reference.controller';
 import { ItemsController } from './items.controller';
 import { ItemsService } from './items.service';
+import { SavedSearchesController } from './saved-searches.controller';
+import { SavedSearchesService } from './saved-searches.service';
 
-@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService] })
+@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService] })
 export class AppModule {}
