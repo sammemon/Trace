@@ -124,6 +124,21 @@ export const resolveReportSchema = z.object({
   resolutionNote: z.string().trim().min(1).max(1000)
 });
 
+export const presignUploadSchema = z.object({
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  sizeBytes: z.number().int().min(1).max(5 * 1024 * 1024),
+  fileName: z.string().trim().min(1).max(200)
+});
+
+export const confirmUploadSchema = z.object({
+  itemId: z.string().uuid(),
+  objectKey: z.string().min(10).max(500),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  sizeBytes: z.number().int().min(1).max(5 * 1024 * 1024),
+  position: z.number().int().min(0).max(4).optional(),
+  isCover: z.boolean().optional()
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;

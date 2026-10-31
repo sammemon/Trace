@@ -23,6 +23,8 @@ import { AdminReportsController, ReportsController } from './reports.controller'
 import { ReportsService } from './reports.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JobsService } from './jobs.service';
+import { UploadsController } from './uploads.controller';
+import { UploadsService } from './uploads.service';
 
-@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService] })
+@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController, UploadsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService, UploadsService] })
 export class AppModule {}

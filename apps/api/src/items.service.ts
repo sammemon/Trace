@@ -111,10 +111,10 @@ export class ItemsService {
   }
 
   private publicInclude() {
-    return { category: { select: { id: true, name: true, slug: true, icon: true, isSensitive: true } }, location: { select: { id: true, name: true, type: true, lat: true, lng: true } }, reporter: { select: { id: true, fullName: true, avatarUrl: true, department: true, trustScore: true } } } as const;
+    return { category: { select: { id: true, name: true, slug: true, icon: true, isSensitive: true } }, location: { select: { id: true, name: true, type: true, lat: true, lng: true } }, reporter: { select: { id: true, fullName: true, avatarUrl: true, department: true, trustScore: true } }, images: { orderBy: { position: 'asc' as const }, select: { id: true, url: true, position: true, isCover: true, width: true, height: true } } } as const;
   }
 
   private toPublicItem(item: any) {
-    return { id: item.id, type: item.type, title: item.title, description: item.description, category: item.category, location: item.location, color: item.color, brand: item.brand, tags: item.tags, locationNote: item.locationNote, occurredAt: item.occurredAt, isTimeApproximate: item.isTimeApproximate, status: item.status, viewCount: item.viewCount, expiresAt: item.expiresAt, createdAt: item.createdAt, updatedAt: item.updatedAt, postedBy: item.reporter };
+    return { id: item.id, type: item.type, title: item.title, description: item.description, category: item.category, location: item.location, color: item.color, brand: item.brand, tags: item.tags, images: item.images ?? [], locationNote: item.locationNote, occurredAt: item.occurredAt, isTimeApproximate: item.isTimeApproximate, status: item.status, viewCount: item.viewCount, expiresAt: item.expiresAt, createdAt: item.createdAt, updatedAt: item.updatedAt, postedBy: item.reporter };
   }
 }

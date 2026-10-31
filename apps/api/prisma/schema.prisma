@@ -223,6 +223,7 @@ model Item {
   category           Category         @relation(fields: [categoryId], references: [id])
   location           CampusLocation   @relation(fields: [locationId], references: [id])
   bookmarks          Bookmark[]
+  images             ItemImage[]
   verificationQuestions Json?       @map("verification_questions")
   claims              Claim[]
 
@@ -240,6 +241,24 @@ model Bookmark {
 
   @@id([userId, itemId])
   @@map("bookmarks")
+}
+
+model ItemImage {
+  id          String   @id @default(uuid()) @db.Uuid
+  itemId      String   @map("item_id") @db.Uuid
+  objectKey   String   @map("object_key")
+  url         String
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  width       Int?
+  height      Int?
+  position    Int      @default(0)
+  isCover     Boolean  @default(false) @map("is_cover")
+  createdAt   DateTime @default(now()) @map("created_at")
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, position])
+  @@map("item_images")
 }
 
 model SavedSearch {
