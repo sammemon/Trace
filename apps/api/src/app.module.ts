@@ -19,6 +19,8 @@ import { ChatService } from './chat.service';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { ChatGateway } from './chat.gateway';
+import { AdminReportsController, ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
 
-@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway] })
+@Module({ controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService] })
 export class AppModule {}

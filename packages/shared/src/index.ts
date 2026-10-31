@@ -112,6 +112,18 @@ export const messageSchema = z.object({
   body: z.string().trim().min(1).max(2000)
 });
 
+export const reportSchema = z.object({
+  targetType: z.enum(['ITEM', 'USER', 'MESSAGE', 'CLAIM']),
+  targetId: z.string().uuid(),
+  reason: z.enum(['SPAM', 'INAPPROPRIATE', 'SCAM', 'HARASSMENT', 'WRONG_INFO', 'OTHER']),
+  details: z.string().trim().max(1000).optional()
+});
+
+export const resolveReportSchema = z.object({
+  action: z.enum(['DISMISS', 'HIDE_ITEM', 'REMOVE_ITEM', 'WARN_USER']),
+  resolutionNote: z.string().trim().min(1).max(1000)
+});
+
 export type Role = z.infer<typeof roleSchema>;
 export type ItemType = z.infer<typeof itemTypeSchema>;
 export type ItemStatus = z.infer<typeof itemStatusSchema>;

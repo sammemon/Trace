@@ -66,6 +66,19 @@ enum MessageType {
   SYSTEM
 }
 
+enum ReportTargetType {
+  ITEM
+  USER
+  MESSAGE
+  CLAIM
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
 model User {
   id              String     @id @default(uuid()) @db.Uuid
   email           String     @unique
@@ -97,6 +110,9 @@ model User {
   conversationsB  Conversation[] @relation("conversationUserB")
   messages        Message[]
   notifications   Notification[]
+  reports         Report[]
+  handledReports  Report[] @relation("handledReports")
+  auditLogs       AuditLog[]
 
   @@index([studentIdHash])
   @@map("users")
@@ -326,4 +342,37 @@ model Notification {
 
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+model Report {
+  id             String           @id @default(uuid()) @db.Uuid
+  reporterId     String           @map("reporter_id") @db.Uuid
+  targetType     ReportTargetType @map("target_type")
+  targetId       String           @map("target_id") @db.Uuid
+  reason         String
+  details        String?
+  status         ReportStatus     @default(OPEN)
+  handledById    String?          @map("handled_by") @db.Uuid
+  resolutionNote String?         @map("resolution_note")
+  resolvedAt     DateTime?        @map("resolved_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  reporter       User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  handledBy     User?            @relation("handledReports", fields: [handledById], references: [id])
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @map("actor_id") @db.Uuid
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("audit_logs")
 }
