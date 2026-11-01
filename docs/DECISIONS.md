@@ -20,3 +20,6 @@ Passwords use Argon2id, access tokens expire after 15 minutes, refresh tokens ar
 
 ## 2026-10-31: Seed and local runtime readiness
 The admin seed account uses an Argon2id hash and campus locations use a compound unique key so repeated seeds are safe. The API explicitly loads `.env`; live migration and seed verification remain pending until Docker Desktop is installed on the development machine.
+
+## 2026-11-01: Initial rate limiting storage
+The first rate-limit implementation uses process-local buckets so auth, OTP, posts, claims, messages, and upload abuse controls work without Redis. A production deployment must move the same policy keys to Redis before horizontal scaling.
