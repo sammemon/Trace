@@ -1,6 +1,6 @@
 # Security
 
-TRACE uses strict TypeScript, Helmet, explicit CORS configuration, environment-based secrets, Prisma parameterized queries, Argon2id passwords, short-lived JWT access tokens, hashed rotating refresh tokens, RBAC, signed uploads, participant-only chat, message masking, and append-only moderation audit records.
+TRACE uses strict TypeScript, Helmet, explicit CORS configuration, environment-based secrets, Prisma parameterized queries, Argon2id passwords, short-lived JWT access tokens, hashed rotating refresh tokens, RBAC, route-aware throttling, signed uploads, participant-only chat, message masking, persistent user blocking, and append-only moderation audit records.
 
 ## STRIDE-lite threat model
 

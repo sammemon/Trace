@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { HealthController } from './health.controller';
 import { PrismaService } from './prisma.service';
 import { AuthController } from './auth.controller';
@@ -26,6 +26,13 @@ import { JobsService } from './jobs.service';
 import { UploadsController } from './uploads.controller';
 import { UploadsService } from './uploads.service';
 import { MatchingService } from './matching.service';
+import { RateLimitMiddleware } from './rate-limit.middleware';
+import { RateLimitService } from './rate-limit.service';
+import { BlocksService } from './blocks.service';
 
-@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController, UploadsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService, UploadsService, MatchingService] })
-export class AppModule {}
+@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController, UploadsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService, UploadsService, MatchingService, RateLimitService, BlocksService] })
+export class AppModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(RateLimitMiddleware).forRoutes('*');
+	}
+}

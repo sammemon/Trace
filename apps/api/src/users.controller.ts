@@ -4,11 +4,12 @@ import { apiSuccess } from '@trace/shared';
 import { AuthGuard } from './auth.guard';
 import type { AuthenticatedRequest } from './auth.guard';
 import { UsersService } from './users.service';
+import { BlocksService } from './blocks.service';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly blocksService: BlocksService) {}
 
   @Get('me')
   @ApiBearerAuth()
@@ -42,4 +43,13 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async preferences(@Req() request: AuthenticatedRequest, @Body() body: unknown) { return apiSuccess(await this.usersService.updateNotificationPreferences(request.user!.id, body)); }
+
+  @Post(':id/block')
+  async block(@Req() request: AuthenticatedRequest, @Param('id') id: string) { return apiSuccess(await this.blocksService.block(request.user!.id, id)); }
+
+  @Delete(':id/block')
+  async unblock(@Req() request: AuthenticatedRequest, @Param('id') id: string) { return apiSuccess(await this.blocksService.unblock(request.user!.id, id)); }
+
+  @Get('me/blocked')
+  async blocked(@Req() request: AuthenticatedRequest) { return apiSuccess(await this.blocksService.list(request.user!.id)); }
 }

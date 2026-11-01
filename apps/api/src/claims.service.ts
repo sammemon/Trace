@@ -12,6 +12,8 @@ export class ClaimsService {
     const item = await this.prisma.item.findFirst({ where: { id: itemId, moderationStatus: 'VISIBLE' } });
     if (!item) throw new NotFoundException('Item not found');
     if (item.reporterId === claimantId) throw new BadRequestException('You cannot claim your own item');
+    const block = await (this.prisma as any).block?.findFirst({ where: { OR: [{ blockerId: claimantId, blockedId: item.reporterId }, { blockerId: item.reporterId, blockedId: claimantId }] } });
+    if (block) throw new ForbiddenException('You cannot claim an item from this user');
     if (!['ACTIVE', 'CLAIM_PENDING'].includes(item.status)) throw new BadRequestException('This item is not available for claims');
     const existing = await this.prisma.claim.findUnique({ where: { itemId_claimantId: { itemId, claimantId } } });
     if (existing && ['PENDING', 'MORE_INFO_REQUESTED', 'APPROVED'].includes(existing.status)) throw new BadRequestException('You already have an active claim for this item');

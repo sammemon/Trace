@@ -43,6 +43,9 @@ export class ChatService {
   private async requireParticipant(userId: string, conversationId: string) {
     const conversation = await this.prisma.conversation.findFirst({ where: { id: conversationId, OR: [{ userAId: userId }, { userBId: userId }] } });
     if (!conversation) throw new ForbiddenException('You are not part of this conversation');
+    const otherUserId = conversation.userAId === userId ? conversation.userBId : conversation.userAId;
+    const block = await (this.prisma as any).block?.findFirst({ where: { OR: [{ blockerId: userId, blockedId: otherUserId }, { blockerId: otherUserId, blockedId: userId }] } });
+    if (block) throw new ForbiddenException('This conversation is unavailable');
     return conversation;
   }
 

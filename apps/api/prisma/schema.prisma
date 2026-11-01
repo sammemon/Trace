@@ -113,6 +113,8 @@ model User {
   reports         Report[]
   handledReports  Report[] @relation("handledReports")
   auditLogs       AuditLog[]
+  blocksCreated   Block[] @relation("blocker")
+  blocksReceived  Block[] @relation("blocked")
 
   @@index([studentIdHash])
   @@map("users")
@@ -232,6 +234,17 @@ model Item {
   @@index([status, moderationStatus, createdAt])
   @@index([categoryId])
   @@map("items")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  blocker   User     @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("blocks")
 }
 
 model Bookmark {
