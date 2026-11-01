@@ -26,7 +26,7 @@ export class JobsService {
     const soon = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
     const items = await this.prisma.item.findMany({ where: { status: 'ACTIVE', expiresAt: { gt: now, lt: soon } }, select: { id: true, title: true, reporterId: true, expiresAt: true } });
     if (!items.length) return;
-    await this.prisma.notification.createMany({ data: items.map((item) => ({ userId: item.reporterId, type: 'ITEM_EXPIRING_SOON', title: 'Item expiring soon', body: `${item.title} will expire soon. Renew it if it is still unresolved.`, data: { itemId: item.id, expiresAt: item.expiresAt.toISOString() } })) });
+    await this.prisma.notification.createMany({ data: items.map((item) => ({ userId: item.reporterId, type: 'ITEM_EXPIRING_SOON', title: 'Item expiring soon', body: `${item.title} will expire soon. Renew it if it is still unresolved.`, data: JSON.stringify({ itemId: item.id, expiresAt: item.expiresAt.toISOString() }) })) });
     this.logger.log(`Sent ${items.length} expiry reminders`);
   }
 }

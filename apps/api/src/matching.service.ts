@@ -12,7 +12,7 @@ export class MatchingService {
     if (!item || item.status !== 'ACTIVE') return [];
     if (item.type === 'FOUND' && item.idNumberHash) {
       const owners = await this.prisma.user.findMany({ where: { studentIdHash: item.idNumberHash, status: 'ACTIVE' }, select: { id: true } });
-      if (owners.length) await this.prisma.notification.createMany({ data: owners.map((owner) => ({ userId: owner.id, type: 'ID_CARD_POSSIBLE_MATCH', title: 'Possible ID card match', body: 'An ID card matching your registered details may have been found.', data: { itemId: item.id } })) });
+      if (owners.length) await this.prisma.notification.createMany({ data: owners.map((owner) => ({ userId: owner.id, type: 'ID_CARD_POSSIBLE_MATCH', title: 'Possible ID card match', body: 'An ID card matching your registered details may have been found.', data: JSON.stringify({ itemId: item.id }) })) });
     }
     const opposite = item.type === 'LOST' ? 'FOUND' : 'LOST';
     const candidates = await this.prisma.item.findMany({ where: { type: opposite, status: { in: ['ACTIVE', 'CLAIM_PENDING'] }, moderationStatus: 'VISIBLE', categoryId: item.categoryId }, include: { location: true } });
@@ -22,9 +22,9 @@ export class MatchingService {
       const found = item.type === 'FOUND' ? item : candidate;
       const scored = this.score(lost, found);
       if (scored.score < 60) continue;
-      const match = await this.prisma.match.upsert({ where: { lostItemId_foundItemId: { lostItemId: lost.id, foundItemId: found.id } }, create: { lostItemId: lost.id, foundItemId: found.id, score: scored.score, reasons: scored.reasons }, update: { score: scored.score, reasons: scored.reasons, status: 'NEW' } });
+      const match = await this.prisma.match.upsert({ where: { lostItemId_foundItemId: { lostItemId: lost.id, foundItemId: found.id } }, create: { lostItemId: lost.id, foundItemId: found.id, score: scored.score, reasons: JSON.stringify(scored.reasons) }, update: { score: scored.score, reasons: JSON.stringify(scored.reasons), status: 'NEW' } });
       matches.push(match);
-      await this.prisma.notification.create({ data: { userId: lost.reporterId, type: 'MATCH_FOUND', title: 'Possible match found', body: 'A new found item may match your lost item.', data: { matchId: match.id, itemId: found.id } } });
+      await this.prisma.notification.create({ data: { userId: lost.reporterId, type: 'MATCH_FOUND', title: 'Possible match found', body: 'A new found item may match your lost item.', data: JSON.stringify({ matchId: match.id, itemId: found.id }) } });
     }
     if (matches.length) this.logger.log(`Created ${matches.length} possible matches for ${itemId}`);
     return matches;

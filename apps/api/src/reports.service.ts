@@ -30,8 +30,8 @@ export class ReportsService {
     const status = data.action === 'DISMISS' ? 'DISMISSED' : 'RESOLVED';
     const [updated] = await this.prisma.$transaction([
       this.prisma.report.update({ where: { id: reportId }, data: { status, handledById: actorId, resolutionNote: data.resolutionNote, resolvedAt: new Date() } }),
-      this.prisma.auditLog.create({ data: { actorId, action: data.action, targetType: report.targetType, targetId: report.targetId, metadata: { reportId, resolutionNote: data.resolutionNote } } }),
-      this.prisma.notification.create({ data: { userId: report.reporterId, type: 'REPORT_UPDATE', title: 'Report updated', body: 'A moderator reviewed your report.', data: { reportId } } })
+      this.prisma.auditLog.create({ data: { actorId, action: data.action, targetType: report.targetType, targetId: report.targetId, metadata: JSON.stringify({ reportId, resolutionNote: data.resolutionNote }) } }),
+      this.prisma.notification.create({ data: { userId: report.reporterId, type: 'REPORT_UPDATE', title: 'Report updated', body: 'A moderator reviewed your report.', data: JSON.stringify({ reportId }) } })
     ]);
     return updated;
   }

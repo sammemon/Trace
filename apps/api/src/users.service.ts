@@ -30,7 +30,7 @@ export class UsersService {
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: userId },
-        data: { email: anonymizedEmail, fullName: 'Deleted user', department: 'Deleted', batchYear: 2000, passwordHash: 'deleted', studentIdHash: null, avatarUrl: null, bio: null, status: 'DELETED', deletedAt: new Date(), notificationPrefs: {}, quietHours: Prisma.JsonNull }
+        data: { email: anonymizedEmail, fullName: 'Deleted user', department: 'Deleted', batchYear: 2000, passwordHash: 'deleted', studentIdHash: null, avatarUrl: null, bio: null, status: 'DELETED', deletedAt: new Date(), notificationPrefs: '{}', quietHours: null }
       }),
       this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } })
     ]);
@@ -53,9 +53,9 @@ export class UsersService {
     const current = await this.prisma.user.findUnique({ where: { id: userId }, select: { notificationPrefs: true, quietHours: true } });
     if (!current) throw new NotFoundException('User not found');
     const { quietHoursStart, quietHoursEnd, ...preferences } = data;
-    const currentPreferences = (current.notificationPrefs as Record<string, unknown>) ?? {};
-    const currentQuietHours = (current.quietHours as Record<string, unknown>) ?? {};
-    const user = await this.prisma.user.update({ where: { id: userId }, data: { notificationPrefs: { ...currentPreferences, ...preferences }, quietHours: { ...currentQuietHours, ...(quietHoursStart !== undefined ? { start: quietHoursStart } : {}), ...(quietHoursEnd !== undefined ? { end: quietHoursEnd } : {}) } } });
+    const currentPreferences = current.notificationPrefs ? JSON.parse(current.notificationPrefs) : {};
+    const currentQuietHours = current.quietHours ? JSON.parse(current.quietHours) : {};
+    const user = await this.prisma.user.update({ where: { id: userId }, data: { notificationPrefs: JSON.stringify({ ...currentPreferences, ...preferences }), quietHours: JSON.stringify({ ...currentQuietHours, ...(quietHoursStart !== undefined ? { start: quietHoursStart } : {}), ...(quietHoursEnd !== undefined ? { end: quietHoursEnd } : {}) }) } });
     return { notificationPrefs: user.notificationPrefs, quietHours: user.quietHours };
   }
 

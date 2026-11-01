@@ -30,9 +30,23 @@ import { RateLimitMiddleware } from './rate-limit.middleware';
 import { RateLimitService } from './rate-limit.service';
 import { BlocksService } from './blocks.service';
 
-@Module({ imports: [ScheduleModule.forRoot()], controllers: [HealthController, AuthController, UsersController, ReferenceController, ItemsController, SavedSearchesController, ClaimsController, ChatController, NotificationsController, ReportsController, AdminReportsController, UploadsController], providers: [PrismaService, AuthService, AuthGuard, UsersService, RolesGuard, ItemsService, SavedSearchesService, ClaimsService, ChatService, NotificationsService, ChatGateway, ReportsService, JobsService, UploadsService, MatchingService, RateLimitService, BlocksService] })
+@Module({
+  imports: [ScheduleModule.forRoot()],
+  controllers: [
+    HealthController, AuthController, UsersController, ReferenceController,
+    ItemsController, SavedSearchesController, ClaimsController, ChatController,
+    NotificationsController, ReportsController, AdminReportsController,
+    UploadsController
+  ],
+  providers: [
+    PrismaService, AuthService, AuthGuard, UsersService, RolesGuard,
+    ItemsService, SavedSearchesService, ClaimsService, ChatService,
+    NotificationsService, ChatGateway, ReportsService, JobsService,
+    UploadsService, MatchingService, RateLimitService, BlocksService
+  ]
+})
 export class AppModule implements NestModule {
-	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(RateLimitMiddleware).forRoutes('*');
-	}
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RateLimitMiddleware).forRoutes('*');
+  }
 }

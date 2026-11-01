@@ -12,7 +12,7 @@ export class SavedSearchesService {
 
   async create(userId: string, input: unknown) {
     const data = savedSearchSchema.parse(input);
-    return this.prisma.savedSearch.create({ data: { userId, query: data.query, filters: data.filters, notify: data.notify }, select: { id: true, query: true, filters: true, notify: true, createdAt: true, updatedAt: true } });
+    return this.prisma.savedSearch.create({ data: { userId, query: data.query, filters: JSON.stringify(data.filters), notify: data.notify }, select: { id: true, query: true, filters: true, notify: true, createdAt: true, updatedAt: true } });
   }
 
   async remove(userId: string, id: string) {

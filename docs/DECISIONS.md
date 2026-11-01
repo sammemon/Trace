@@ -23,3 +23,18 @@ The admin seed account uses an Argon2id hash and campus locations use a compound
 
 ## 2026-11-01: Initial rate limiting storage
 The first rate-limit implementation uses process-local buckets so auth, OTP, posts, claims, messages, and upload abuse controls work without Redis. A production deployment must move the same policy keys to Redis before horizontal scaling.
+
+## 2026-11-01: Docker-free local runtime
+Docker is optional for local development. The API runs directly with Node.js through NestJS, whose HTTP adapter is Express, so replacing the backend with a separate Express application would duplicate the existing API work without solving the database requirement. PostgreSQL remains required by the Prisma schema; Redis, S3-compatible storage, and SMTP are optional until their related features are used.
+
+## 2026-11-01: Supabase database hosting
+Supabase is the hosted PostgreSQL provider for the Docker-free setup. Prisma continues to own the schema and migrations through Supabase's PostgreSQL connection string. Supabase REST/API keys are reserved for optional Supabase services and are never substituted for `DATABASE_URL` or exposed in the web client.
+
+## 2026-11-01: Multi-theme UI system
+The web app ships with four user-selectable themes: Night Gold, Ivory Gold, White & Gold, and Forest. Theme preference is persisted in `localStorage` under `trace_theme` and applied via `data-theme` on `<html>`. The `ThemeToggle` component renders in both the post-login page header and on all auth screens (login, register, verify OTP, forgot password). All theme-dependent colors use CSS custom properties so the brand panel, form inputs, and error states adapt automatically to each theme.
+
+## 2026-11-01: SQLite for local development
+Supabase PostgreSQL connections failed due to network restrictions. Switched to SQLite for local development (no external database required). Prisma schema uses `String` types instead of `Json` for SQLite compatibility, with `JSON.stringify()`/`JSON.parse()` in service layer for JSON fields. The admin seed account and categories/locations are seeded on first run. Production deployments should migrate to PostgreSQL or another supported provider.
+
+## 2026-11-01: Web-first responsive mobile-style UI
+The admin web app is built as a responsive, mobile-first single-page application using React + Vite + Tailwind-inspired CSS custom properties. It uses a bottom navigation bar on mobile and a sidebar on desktop, matching the mobile app navigation map from the product spec. The Expo mobile client remains a future phase; all API contracts are shared through `packages/shared` so both clients consume the same backend.

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -80,7 +80,7 @@ enum ReportStatus {
 }
 
 model User {
-  id              String     @id @default(uuid()) @db.Uuid
+  id              String     @id @default(uuid())
   email           String     @unique
   passwordHash    String     @map("password_hash")
   fullName        String     @map("full_name")
@@ -96,8 +96,8 @@ model User {
   deletedAt       DateTime?  @map("deleted_at")
   avatarUrl       String?    @map("avatar_url")
   bio             String?
-  notificationPrefs Json      @default("{}") @map("notification_prefs")
-  quietHours      Json?      @map("quiet_hours")
+  notificationPrefs String      @default("{}") @map("notification_prefs")
+  quietHours      String?      @map("quiet_hours")
   locale          String     @default("en")
   items           Item[]
   otpCodes        OtpCode[]
@@ -121,8 +121,8 @@ model User {
 }
 
 model DeviceToken {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
   expoPushToken  String   @unique @map("expo_push_token")
   platform       String
   appVersion     String?  @map("app_version")
@@ -134,13 +134,13 @@ model DeviceToken {
 }
 
 model RefreshToken {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  familyId    String    @map("family_id") @db.Uuid
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  familyId    String    @map("family_id")
   tokenHash   String    @unique @map("token_hash")
   expiresAt   DateTime  @map("expires_at")
   revokedAt   DateTime? @map("revoked_at")
-  replacedBy  String?   @map("replaced_by") @db.Uuid
+  replacedBy  String?   @map("replaced_by")
   createdAt   DateTime  @default(now()) @map("created_at")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -149,7 +149,7 @@ model RefreshToken {
 }
 
 model OtpCode {
-  id         String     @id @default(uuid()) @db.Uuid
+  id         String     @id @default(uuid())
   email      String
   codeHash   String     @map("code_hash")
   purpose    OtpPurpose
@@ -157,7 +157,7 @@ model OtpCode {
   attempts   Int        @default(0)
   consumedAt DateTime?  @map("consumed_at")
   createdAt  DateTime   @default(now()) @map("created_at")
-  userId     String?    @map("user_id") @db.Uuid
+  userId     String?    @map("user_id")
   user       User?      @relation(fields: [userId], references: [id])
 
   @@index([email, purpose, expiresAt])
@@ -165,12 +165,12 @@ model OtpCode {
 }
 
 model Category {
-  id                     String   @id @default(uuid()) @db.Uuid
+  id                     String   @id @default(uuid())
   name                   String
   slug                   String   @unique
   icon                   String
   isSensitive            Boolean  @default(false) @map("is_sensitive")
-  verificationTemplates Json     @default("[]") @map("verification_templates")
+  verificationTemplates String     @default("[]") @map("verification_templates")
   sortOrder              Int      @default(0) @map("sort_order")
   isActive               Boolean  @default(true) @map("is_active")
   items                  Item[]
@@ -180,11 +180,11 @@ model Category {
 }
 
 model CampusLocation {
-  id                    String   @id @default(uuid()) @db.Uuid
+  id                    String   @id @default(uuid())
   name                  String
   type                  String
-  lat                   Decimal  @db.Decimal(9, 6)
-  lng                   Decimal  @db.Decimal(9, 6)
+  lat Float  
+  lng Float  
   description           String?
   isSafeHandoverPoint   Boolean  @default(false) @map("is_safe_handover_point")
   isActive              Boolean  @default(true) @map("is_active")
@@ -197,15 +197,15 @@ model CampusLocation {
 }
 
 model Item {
-  id                 String           @id @default(uuid()) @db.Uuid
+  id                 String           @id @default(uuid())
   type               ItemType
   title              String
   description        String
-  categoryId         String           @map("category_id") @db.Uuid
+  categoryId         String           @map("category_id")
   color              String?
   brand              String?
-  tags               String[]
-  locationId         String           @map("location_id") @db.Uuid
+  tags String 
+  locationId         String           @map("location_id")
   locationNote       String?          @map("location_note")
   occurredAt         DateTime         @map("occurred_at")
   isTimeApproximate  Boolean          @default(false) @map("is_time_approximate")
@@ -220,13 +220,13 @@ model Item {
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
   lastRenewedAt      DateTime?        @map("last_renewed_at")
-  reporterId         String           @map("reporter_id") @db.Uuid
+  reporterId         String           @map("reporter_id")
   reporter           User             @relation(fields: [reporterId], references: [id])
   category           Category         @relation(fields: [categoryId], references: [id])
   location           CampusLocation   @relation(fields: [locationId], references: [id])
   bookmarks          Bookmark[]
   images             ItemImage[]
-  verificationQuestions Json?       @map("verification_questions")
+  verificationQuestions String?       @map("verification_questions")
   claims              Claim[]
   matchesAsLost       Match[] @relation("lostItemMatches")
   matchesAsFound      Match[] @relation("foundItemMatches")
@@ -237,8 +237,8 @@ model Item {
 }
 
 model Block {
-  blockerId String   @map("blocker_id") @db.Uuid
-  blockedId String   @map("blocked_id") @db.Uuid
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
   createdAt DateTime @default(now()) @map("created_at")
   blocker   User     @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
   blocked   User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
@@ -248,8 +248,8 @@ model Block {
 }
 
 model Bookmark {
-  userId    String   @map("user_id") @db.Uuid
-  itemId    String   @map("item_id") @db.Uuid
+  userId    String   @map("user_id")
+  itemId    String   @map("item_id")
   createdAt DateTime @default(now()) @map("created_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
@@ -259,8 +259,8 @@ model Bookmark {
 }
 
 model ItemImage {
-  id          String   @id @default(uuid()) @db.Uuid
-  itemId      String   @map("item_id") @db.Uuid
+  id          String   @id @default(uuid())
+  itemId      String   @map("item_id")
   objectKey   String   @map("object_key")
   url         String
   mimeType    String   @map("mime_type")
@@ -277,10 +277,10 @@ model ItemImage {
 }
 
 model SavedSearch {
-  id              String   @id @default(uuid()) @db.Uuid
-  userId          String   @map("user_id") @db.Uuid
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
   query           String
-  filters         Json     @default("{}")
+  filters         String     @default("{}")
   notify          Boolean  @default(true)
   lastNotifiedAt  DateTime? @map("last_notified_at")
   createdAt       DateTime @default(now()) @map("created_at")
@@ -292,11 +292,11 @@ model SavedSearch {
 }
 
 model Match {
-  id          String   @id @default(uuid()) @db.Uuid
-  lostItemId  String   @map("lost_item_id") @db.Uuid
-  foundItemId String   @map("found_item_id") @db.Uuid
+  id          String   @id @default(uuid())
+  lostItemId  String   @map("lost_item_id")
+  foundItemId String   @map("found_item_id")
   score       Int
-  reasons     Json     @default("[]")
+  reasons     String     @default("[]")
   status      String   @default("NEW")
   createdAt   DateTime @default(now()) @map("created_at")
   lostItem    Item     @relation("lostItemMatches", fields: [lostItemId], references: [id], onDelete: Cascade)
@@ -308,9 +308,9 @@ model Match {
 }
 
 model Claim {
-  id            String      @id @default(uuid()) @db.Uuid
-  itemId        String      @map("item_id") @db.Uuid
-  claimantId    String      @map("claimant_id") @db.Uuid
+  id            String      @id @default(uuid())
+  itemId        String      @map("item_id")
+  claimantId    String      @map("claimant_id")
   status        ClaimStatus @default(PENDING)
   message       String
   decisionNote  String?     @map("decision_note")
@@ -336,8 +336,8 @@ model Claim {
 }
 
 model ClaimAnswer {
-  id         String   @id @default(uuid()) @db.Uuid
-  claimId    String   @map("claim_id") @db.Uuid
+  id         String   @id @default(uuid())
+  claimId    String   @map("claim_id")
   question   String
   answer     String
   createdAt  DateTime @default(now()) @map("created_at")
@@ -347,11 +347,11 @@ model ClaimAnswer {
 }
 
 model Conversation {
-  id        String             @id @default(uuid()) @db.Uuid
-  claimId   String             @unique @map("claim_id") @db.Uuid
-  itemId    String             @map("item_id") @db.Uuid
-  userAId   String             @map("user_a_id") @db.Uuid
-  userBId   String             @map("user_b_id") @db.Uuid
+  id        String             @id @default(uuid())
+  claimId   String             @unique @map("claim_id")
+  itemId    String             @map("item_id")
+  userAId   String             @map("user_a_id")
+  userBId   String             @map("user_b_id")
   status    ConversationStatus @default(OPEN)
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
@@ -366,9 +366,9 @@ model Conversation {
 }
 
 model Message {
-  id             String         @id @default(uuid()) @db.Uuid
-  conversationId String         @map("conversation_id") @db.Uuid
-  senderId       String         @map("sender_id") @db.Uuid
+  id             String         @id @default(uuid())
+  conversationId String         @map("conversation_id")
+  senderId       String         @map("sender_id")
   type           MessageType    @default(TEXT)
   body           String
   createdAt      DateTime       @default(now()) @map("created_at")
@@ -380,12 +380,12 @@ model Message {
 }
 
 model Notification {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
   type      String
   title     String
   body      String
-  data      Json     @default("{}")
+  data      String     @default("{}")
   readAt    DateTime? @map("read_at")
   createdAt DateTime @default(now()) @map("created_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -395,14 +395,14 @@ model Notification {
 }
 
 model Report {
-  id             String           @id @default(uuid()) @db.Uuid
-  reporterId     String           @map("reporter_id") @db.Uuid
+  id             String           @id @default(uuid())
+  reporterId     String           @map("reporter_id")
   targetType     ReportTargetType @map("target_type")
-  targetId       String           @map("target_id") @db.Uuid
+  targetId       String           @map("target_id")
   reason         String
   details        String?
   status         ReportStatus     @default(OPEN)
-  handledById    String?          @map("handled_by") @db.Uuid
+  handledById    String?          @map("handled_by")
   resolutionNote String?         @map("resolution_note")
   resolvedAt     DateTime?        @map("resolved_at")
   createdAt      DateTime         @default(now()) @map("created_at")
@@ -414,15 +414,17 @@ model Report {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid()) @db.Uuid
-  actorId    String   @map("actor_id") @db.Uuid
+  id         String   @id @default(uuid())
+  actorId    String   @map("actor_id")
   action     String
   targetType String   @map("target_type")
-  targetId   String   @map("target_id") @db.Uuid
-  metadata   Json     @default("{}")
+  targetId   String   @map("target_id")
+  metadata   String     @default("{}")
   createdAt  DateTime @default(now()) @map("created_at")
   actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+

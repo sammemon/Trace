@@ -22,6 +22,7 @@ export class ItemsService {
         ...publicItemData,
         reporterId: userId,
         expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+        tags: JSON.stringify(publicItemData.tags ?? []),
         ...(data.idNumber ? { idNumberHash: this.hashStudentId(data.idNumber) } : {})
       },
       include: this.publicInclude()
@@ -39,7 +40,7 @@ export class ItemsService {
         locationId: query.locationId,
         status: query.status,
         moderationStatus: 'VISIBLE',
-        ...(query.search ? { OR: [{ title: { contains: query.search, mode: 'insensitive' } }, { description: { contains: query.search, mode: 'insensitive' } }, { brand: { contains: query.search, mode: 'insensitive' } }] } : {})
+        ...(query.search ? { OR: [{ title: { contains: query.search } }, { description: { contains: query.search } }, { brand: { contains: query.search } }] } : {})
       },
       orderBy: { createdAt: 'desc' },
       take: query.limit + 1,
@@ -66,7 +67,17 @@ export class ItemsService {
     const data = updateItemSchema.parse(input);
     const item = await this.requireOwner(userId, itemId);
     if (item.status !== 'ACTIVE') throw new BadRequestException('Only active items can be edited');
-    const updated = await this.prisma.item.update({ where: { id: itemId }, data, include: this.publicInclude() });
+    const { categoryId, locationId, tags, ...restData } = data;
+    const updated = await this.prisma.item.update({
+      where: { id: itemId },
+      data: {
+        ...restData,
+        ...(tags !== undefined ? { tags: JSON.stringify(tags) } : {}),
+        ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+        ...(locationId ? { location: { connect: { id: locationId } } } : {})
+      },
+      include: this.publicInclude()
+    });
     return this.toPublicItem(updated);
   }
 
@@ -130,6 +141,6 @@ export class ItemsService {
   }
 
   private toPublicItem(item: any) {
-    return { id: item.id, type: item.type, title: item.title, description: item.description, category: item.category, location: item.location, color: item.color, brand: item.brand, tags: item.tags, images: item.images ?? [], locationNote: item.locationNote, occurredAt: item.occurredAt, isTimeApproximate: item.isTimeApproximate, status: item.status, viewCount: item.viewCount, expiresAt: item.expiresAt, createdAt: item.createdAt, updatedAt: item.updatedAt, postedBy: item.reporter };
+    return { id: item.id, type: item.type, title: item.title, description: item.description, category: item.category, location: item.location, color: item.color, brand: item.brand, tags: item.tags, images: item.images ?? [], locationNote: item.locationNote, occurredAt: item.occurredAt, isTimeApproximate: item.isTimeApproximate, verificationQuestions: item.type === 'FOUND' ? (item.verificationQuestions ?? []) : [], status: item.status, viewCount: item.viewCount, expiresAt: item.expiresAt, createdAt: item.createdAt, updatedAt: item.updatedAt, postedBy: item.reporter };
   }
 }

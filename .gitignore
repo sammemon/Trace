@@ -6,3 +6,16 @@ coverage/
 .env.example
 .turbo/
 *.log
+
+# SQLite database (dev)
+apps/api/prisma/dev.db
+apps/api/dev.db
+
+# Temporary/test files
+apps/api/test-db.ts
+_tmp_*
+write-fixes.js
+
+# Editor/IDE
+.vscode/
+.idea/

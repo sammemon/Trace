@@ -25,7 +25,7 @@ export class ChatService {
     const recipientId = conversation.userAId === userId ? conversation.userBId : conversation.userAId;
     const [message] = await this.prisma.$transaction([
       this.prisma.message.create({ data: { conversationId, senderId: userId, body, type: 'TEXT' }, select: { id: true, type: true, body: true, senderId: true, createdAt: true } }),
-      this.prisma.notification.create({ data: { userId: recipientId, type: 'NEW_MESSAGE', title: 'New message', body: 'You have a new message about your item.', data: { conversationId } } })
+      this.prisma.notification.create({ data: { userId: recipientId, type: 'NEW_MESSAGE', title: 'New message', body: 'You have a new message about your item.', data: JSON.stringify({ conversationId }) } })
     ]);
     return message;
   }
