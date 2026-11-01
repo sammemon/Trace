@@ -1,13 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { createItemSchema, itemQuerySchema, updateItemSchema } from '@trace/shared';
 import { PrismaService } from './prisma.service';
+import { createHmac } from 'node:crypto';
+import { MatchingService } from './matching.service';
 
 @Injectable()
 export class ItemsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly matchingService?: MatchingService) {}
 
   async create(userId: string, input: unknown) {
     const data = createItemSchema.parse(input);
+    const { idNumber, ...publicItemData } = data;
     const [category, location] = await Promise.all([
       this.prisma.category.findFirst({ where: { id: data.categoryId, isActive: true } }),
       this.prisma.campusLocation.findFirst({ where: { id: data.locationId, isActive: true } })
@@ -16,12 +19,14 @@ export class ItemsService {
 
     const item = await this.prisma.item.create({
       data: {
-        ...data,
+        ...publicItemData,
         reporterId: userId,
-        expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+        expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+        ...(data.idNumber ? { idNumberHash: this.hashStudentId(data.idNumber) } : {})
       },
       include: this.publicInclude()
     });
+    if (this.matchingService) void this.matchingService.matchForItem(item.id);
     return this.toPublicItem(item);
   }
 
@@ -103,11 +108,21 @@ export class ItemsService {
     return bookmarks.map(({ item }) => this.toPublicItem(item));
   }
 
+  async matches(userId: string, itemId: string) {
+    return this.matchingService ? this.matchingService.matchesForOwner(userId, itemId) : [];
+  }
+
   private async requireOwner(userId: string, itemId: string) {
     const item = await this.prisma.item.findFirst({ where: { id: itemId } });
     if (!item) throw new NotFoundException('Item not found');
     if (item.reporterId !== userId) throw new BadRequestException('Only the item owner can perform this action');
     return item;
+  }
+
+  private hashStudentId(value: string) {
+    const secret = process.env.STUDENT_ID_HMAC_SECRET;
+    if (!secret || secret.length < 16) throw new BadRequestException('Student ID matching is not configured');
+    return createHmac('sha256', secret).update(value.trim().toLowerCase()).digest('hex');
   }
 
   private publicInclude() {

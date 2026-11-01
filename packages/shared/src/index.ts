@@ -11,7 +11,8 @@ export const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(128),
   department: z.string().trim().min(2).max(120),
-  batchYear: z.number().int().min(2000).max(2100)
+  batchYear: z.number().int().min(2000).max(2100),
+  studentId: z.string().trim().min(2).max(80).optional()
 });
 
 export const verifyEmailSchema = z.object({
@@ -74,7 +75,8 @@ export const createItemSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(30)).max(10).default([]),
   locationNote: z.string().trim().max(240).optional(),
   occurredAt: z.coerce.date().refine((date) => date <= new Date(), 'Date cannot be in the future'),
-  isTimeApproximate: z.boolean().default(false)
+  isTimeApproximate: z.boolean().default(false),
+  idNumber: z.string().trim().min(2).max(120).optional()
 });
 
 export const updateItemSchema = createItemSchema.partial();

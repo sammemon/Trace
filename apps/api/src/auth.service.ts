@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import * as argon2 from 'argon2';
-import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { changePasswordSchema, loginSchema, refreshSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from '@trace/shared';
 
@@ -45,7 +45,8 @@ export class AuthService {
         passwordHash: await argon2.hash(data.password, { type: argon2.argon2id }),
         fullName: data.fullName,
         department: data.department,
-        batchYear: data.batchYear
+        batchYear: data.batchYear,
+        ...(data.studentId ? { studentIdHash: this.hashStudentId(data.studentId) } : {})
       }
     });
     const code = await this.createOtp(user.id, user.email, 'VERIFY_EMAIL');
@@ -261,6 +262,12 @@ export class AuthService {
 
   private hashToken(token: string) {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  private hashStudentId(studentId: string) {
+    const secret = process.env.STUDENT_ID_HMAC_SECRET;
+    if (!secret || secret.length < 16) throw new Error('STUDENT_ID_HMAC_SECRET must be configured');
+    return createHmac('sha256', secret).update(studentId.trim().toLowerCase()).digest('hex');
   }
 
   private constantTimeEqual(left: string, right: string) {

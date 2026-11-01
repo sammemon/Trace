@@ -226,6 +226,8 @@ model Item {
   images             ItemImage[]
   verificationQuestions Json?       @map("verification_questions")
   claims              Claim[]
+  matchesAsLost       Match[] @relation("lostItemMatches")
+  matchesAsFound      Match[] @relation("foundItemMatches")
 
   @@index([status, moderationStatus, createdAt])
   @@index([categoryId])
@@ -274,6 +276,22 @@ model SavedSearch {
 
   @@index([userId, createdAt])
   @@map("saved_searches")
+}
+
+model Match {
+  id          String   @id @default(uuid()) @db.Uuid
+  lostItemId  String   @map("lost_item_id") @db.Uuid
+  foundItemId String   @map("found_item_id") @db.Uuid
+  score       Int
+  reasons     Json     @default("[]")
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now()) @map("created_at")
+  lostItem    Item     @relation("lostItemMatches", fields: [lostItemId], references: [id], onDelete: Cascade)
+  foundItem   Item     @relation("foundItemMatches", fields: [foundItemId], references: [id], onDelete: Cascade)
+
+  @@unique([lostItemId, foundItemId])
+  @@index([lostItemId, score])
+  @@map("matches")
 }
 
 model Claim {

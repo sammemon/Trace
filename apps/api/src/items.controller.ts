@@ -58,6 +58,11 @@ export class ItemsController {
   @Get('bookmarks')
   async bookmarks(@Req() request: AuthenticatedRequest) { return apiSuccess(await this.itemsService.bookmarks(request.user!.id)); }
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get(':id/matches')
+  async matches(@Req() request: AuthenticatedRequest, @Param('id') id: string) { return apiSuccess(await this.itemsService.matches(request.user!.id, id)); }
+
   @Get(':id')
   async getOne(@Param('id') id: string) { return apiSuccess(await this.itemsService.getOne(id)); }
 }
