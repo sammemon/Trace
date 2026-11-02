@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "cd ../../packages/shared && pnpm build && cd ../../apps/api && pnpm exec prisma generate && nest build",
+    "build": "cd ../../packages/shared && pnpm build && cd ../../apps/api && nest build",
     "start": "node dist/main.js",
     "dev": "nest start --watch",
     "lint": "tsc --noEmit",
