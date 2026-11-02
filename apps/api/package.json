@@ -9,7 +9,6 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name foundation",
     "prisma:seed": "tsx prisma/seed.ts"
   },
@@ -30,7 +29,6 @@
     "argon2": "^0.41.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
