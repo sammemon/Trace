@@ -29,6 +29,13 @@ import { MatchingService } from './matching.service';
 import { RateLimitMiddleware } from './rate-limit.middleware';
 import { RateLimitService } from './rate-limit.service';
 import { BlocksService } from './blocks.service';
+import { AdminDashboardController } from './admin-dashboard.controller';
+import { AdminUsersController } from './admin-users.controller';
+import { AdminItemsController } from './admin-items.controller';
+import { AdminHandoverDeskController } from './admin-handover-desk.controller';
+import { AdminAuditLogsController } from './admin-audit-logs.controller';
+import { AdminCategoriesController } from './admin-categories.controller';
+import { AdminLocationsController } from './admin-locations.controller';
 
 @Module({
   imports: [ScheduleModule.forRoot()],
@@ -36,7 +43,10 @@ import { BlocksService } from './blocks.service';
     HealthController, AuthController, UsersController, ReferenceController,
     ItemsController, SavedSearchesController, ClaimsController, ChatController,
     NotificationsController, ReportsController, AdminReportsController,
-    UploadsController
+    UploadsController,
+    AdminDashboardController, AdminUsersController, AdminItemsController,
+    AdminHandoverDeskController, AdminAuditLogsController,
+    AdminCategoriesController, AdminLocationsController
   ],
   providers: [
     PrismaService, AuthService, AuthGuard, UsersService, RolesGuard,
