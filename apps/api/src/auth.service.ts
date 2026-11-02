@@ -68,11 +68,9 @@ export class AuthService {
       throw new BadRequestException('The verification code is invalid or expired');
     }
 
-    if (!this.constantTimeEqual(otp.codeHash, this.hashCode(data.code))) {
-      // Allow universal dev code '000000' in development
-      if (process.env.NODE_ENV !== 'production' && data.code === '000000') {
-        // bypass hash check
-      } else {
+    // Universal dev code '000000' bypasses hash check in development
+    if (!(process.env.NODE_ENV !== 'production' && data.code === '000000')) {
+      if (!this.constantTimeEqual(otp.codeHash, this.hashCode(data.code))) {
         await this.prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
         throw new BadRequestException('The verification code is invalid or expired');
       }

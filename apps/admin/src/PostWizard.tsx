@@ -12,7 +12,7 @@ const [draft, setDraft] = useState<DraftItem>(() => {    try { return JSON.parse
 const [categories, setCategories] = useState<Category[]>([]);
 const [locations, setLocations] = useState<CampusLocation[]>([]);
 const [loading, setLoading] = useState(false);
-const [tagInput, setTagInput] = useState('');  // Persist draft  useEffect(() => { localStorage.setItem('trace_draft', JSON.stringify(draft)); }, [draft]);  useEffect(() => {    referenceApi.categories().then(setCategories).catch(() => { });    referenceApi.locations().then(setLocations).catch(() => { });  }, []);
+const [tagInput, setTagInput] = useState('');  // Persist draft  useEffect(() => { localStorage.setItem('trace_draft', JSON.stringify(draft)); }, [draft]);  useEffect(() => {    referenceApi.categories().then(setCategories).catch((e) => { console.error('Categories load error:', e); });    referenceApi.locations().then(setLocations).catch((e) => { console.error('Locations load error:', e); });  }, []);
 const set = (updates: Partial<DraftItem>) => setDraft(d => ({ ...d, ...updates }));
 const selectedCat = categories.find(c => c.id === draft.categoryId);
 function addTag() {    const t = tagInput.trim().toLowerCase().replace(/\s+/g, '-');    if (t && !(draft.tags ?? []).includes(t) && (draft.tags ?? []).length < 10) {      set({ tags: [...(draft.tags ?? []), t] });    }    setTagInput('');  }
