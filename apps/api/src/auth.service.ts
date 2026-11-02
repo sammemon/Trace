@@ -54,7 +54,7 @@ export class AuthService {
     return {
       user: this.toAuthUser(user),
       verificationRequired: true,
-      ...(process.env.NODE_ENV !== 'production' ? { devVerificationCode: code } : {})
+      ...(process.env.NODE_ENV !== 'production' ? { devVerificationCode: '000000' } : {})
     };
   }
 
@@ -69,8 +69,13 @@ export class AuthService {
     }
 
     if (!this.constantTimeEqual(otp.codeHash, this.hashCode(data.code))) {
-      await this.prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
-      throw new BadRequestException('The verification code is invalid or expired');
+      // Allow universal dev code '000000' in development
+      if (process.env.NODE_ENV !== 'production' && data.code === '000000') {
+        // bypass hash check
+      } else {
+        await this.prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+        throw new BadRequestException('The verification code is invalid or expired');
+      }
     }
 
     const user = await this.prisma.user.update({
@@ -88,7 +93,7 @@ export class AuthService {
     const recent = await this.prisma.otpCode.findFirst({ where: { email: data.email, purpose: 'VERIFY_EMAIL' }, orderBy: { createdAt: 'desc' } });
     if (recent && recent.createdAt.getTime() > Date.now() - 60_000) throw new BadRequestException('Please wait before requesting another code');
     const code = await this.createOtp(user.id, user.email, 'VERIFY_EMAIL');
-    return { verificationRequired: true, ...(process.env.NODE_ENV !== 'production' ? { devVerificationCode: code } : {}) };
+    return { verificationRequired: true, ...(process.env.NODE_ENV !== 'production' ? { devVerificationCode: '000000' } : {}) };
   }
 
   async forgotPassword(input: unknown) {
@@ -96,7 +101,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (user) {
       const code = await this.createOtp(user.id, user.email, 'RESET_PASSWORD');
-      if (process.env.NODE_ENV !== 'production') return { accepted: true, devResetCode: code };
+      if (process.env.NODE_ENV !== 'production') return { accepted: true, devResetCode: '000000' };
     }
     return { accepted: true };
   }
@@ -104,7 +109,7 @@ export class AuthService {
   async resetPassword(input: unknown) {
     const data = resetPasswordSchema.parse(input);
     const otp = await this.prisma.otpCode.findFirst({ where: { email: data.email, purpose: 'RESET_PASSWORD', consumedAt: null }, orderBy: { createdAt: 'desc' } });
-    if (!otp || otp.expiresAt <= new Date() || otp.attempts >= MAX_OTP_ATTEMPTS || !this.constantTimeEqual(otp.codeHash, this.hashCode(data.code))) {
+    if (!otp || otp.expiresAt <= new Date() || otp.attempts >= MAX_OTP_ATTEMPTS || (!this.constantTimeEqual(otp.codeHash, this.hashCode(data.code)) && !(process.env.NODE_ENV !== 'production' && data.code === '000000'))) {
       throw new BadRequestException('The reset code is invalid or expired');
     }
     await this.prisma.$transaction([

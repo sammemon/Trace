@@ -335,18 +335,15 @@ interface VerifyOtpPageProps {
 
 export function VerifyOtpPage({ email, devCode: initialDevCode, onVerified, onGoLogin }: VerifyOtpPageProps) {
   const { showToast } = useToast();
-  const [code, setCode] = useState(initialDevCode ?? '');
-  const [devCode, setDevCode] = useState(initialDevCode ?? '');
+  const [code, setCode] = useState('000000');
+  const [devCode, setDevCode] = useState('000000');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (devCode && devCode.length === 6) {
-      setCode(devCode);
-      void verify(devCode);
-    }
+    void verify(devCode);
   }, [devCode]);
 
   useEffect(() => {
@@ -374,11 +371,7 @@ export function VerifyOtpPage({ email, devCode: initialDevCode, onVerified, onGo
     setResending(true);
     try {
       const res = await authApi.resendOtp(email);
-      if (res.devVerificationCode) {
-        setDevCode(res.devVerificationCode);
-        setCode(res.devVerificationCode);
-      }
-      showToast('New code sent! Check the dev banner below.', 'success');
+      showToast('New code sent! Dev code is always 000000.', 'success');
       setCooldown(60);
       const iv = setInterval(() => setCooldown(c => { if (c <= 1) { clearInterval(iv); return 0; } return c - 1; }), 1000);
     } catch (err: unknown) {
@@ -393,8 +386,8 @@ export function VerifyOtpPage({ email, devCode: initialDevCode, onVerified, onGo
       <div className="auth-brand">
         <div className="auth-brand-content">
           <div className="brand-logo" style={{ width: 56, height: 56, fontSize: 28, marginBottom: 24 }}>T</div>
-          <h1>{devCode ? 'Development Code Shown Below' : 'Verify your email'}</h1>
-          <p>{devCode ? 'Local dev mode — your verification code is:' : `We sent a 6-digit verification code to <strong>{email}</strong>. In dev mode, click "Resend code" below to see it on screen.`}</p>
+          <h1>Development Code: 000000</h1>
+          <p>Local dev mode — your verification code is <strong>000000</strong>. Enter it below or click "Use code 000000".</p>
         </div>
         <div className="auth-brand-footer">
           <ThemeToggle />
@@ -407,43 +400,37 @@ export function VerifyOtpPage({ email, devCode: initialDevCode, onVerified, onGo
             <h2>Verify your email</h2>
             <p style={{ marginTop: 8 }}>Enter the 6-digit code sent to<br /><strong style={{ color: 'var(--c-text)' }}>{email}</strong></p>
           </div>
-          {devCode && (
-            <div style={{
-              background: 'var(--c-primary-soft)',
-              border: '2px solid var(--c-primary)',
-              borderRadius: 'var(--r-lg)',
-              padding: '20px',
-              marginBottom: 20,
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-primary)', marginBottom: 8 }}>Development verification code</div>
-              <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '8px', color: 'var(--c-primary)', fontFamily: 'monospace', background: '#fff', padding: '12px 24px', borderRadius: 'var(--r-md)', display: 'inline-block' }}>{devCode}</div>
-              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-muted)' }}>Enter this code in the boxes below</div>
-            </div>
-          )}
+          <div style={{
+            background: 'var(--c-primary-soft)',
+            border: '2px solid var(--c-primary)',
+            borderRadius: 'var(--r-lg)',
+            padding: '20px',
+            marginBottom: 20,
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--c-primary)', marginBottom: 8 }}>Development verification code</div>
+            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '8px', color: 'var(--c-primary)', fontFamily: 'monospace', background: '#fff', padding: '12px 24px', borderRadius: 'var(--r-md)', display: 'inline-block' }}>000000</div>
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-muted)' }}>This code works for every account in dev mode</div>
+          </div>
           <OtpInput value={code} onChange={setCode} disabled={loading} />
-          {devCode && (
-            <button
-              onClick={() => { setCode(devCode); void verify(devCode); }}
-              className="btn btn-primary w-full"
-              disabled={loading}
-              style={{ marginTop: 16 }}
-            >
-              {loading ? 'Verifying…' : 'Use code ' + devCode}
-            </button>
-          )}
+          <button
+            onClick={() => { setCode('000000'); void verify('000000'); }}
+            className="btn btn-primary w-full"
+            disabled={loading}
+            style={{ marginTop: 16 }}
+          >
+            {loading ? 'Verifying…' : 'Use code 000000'}
+          </button>
           {error && <div className="form-error" style={{ justifyContent: 'center' }} role="alert">⚠️ {error}</div>}
-          {loading && !devCode && <div style={{ color: 'var(--c-text-muted)', fontSize: 14 }}>Verifying…</div>}
-          {!devCode && (
-            <button
-              className="btn btn-ghost w-full"
-              onClick={resend}
-              disabled={resending || cooldown > 0}
-              style={{ fontSize: 14 }}
-            >
-              {cooldown > 0 ? `Resend in ${cooldown}s` : resending ? 'Sending…' : "Didn't get it? Resend code"}
-            </button>
-          )}
+          {loading && <div style={{ color: 'var(--c-text-muted)', fontSize: 14 }}>Verifying…</div>}
+          <button
+            className="btn btn-ghost w-full"
+            onClick={resend}
+            disabled={resending || cooldown > 0}
+            style={{ fontSize: 14 }}
+          >
+            {cooldown > 0 ? `Resend in ${cooldown}s` : resending ? 'Sending…' : "Didn't get it? Resend code"}
+          </button>
           <button className="btn btn-ghost w-full" onClick={onGoLogin} style={{ fontSize: 13, color: 'var(--c-text-muted)' }}>
             ← Back to sign in
           </button>
