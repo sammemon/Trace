@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="0 0 2048 2048">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B7791F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="2048" height="2048" fill="url(#grad)" />
+  <text x="1024" y="1100" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="800" font-weight="800" fill="#FFFFFF" text-anchor="middle">T</text>
+  <text x="1024" y="1600" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="120" fill="#FFFFFF" text-anchor="middle" opacity="0.8">TRACE</text>
+  <text x="1024" y="1750" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="80" fill="#FFFFFF" text-anchor="middle" opacity="0.6">Campus Lost &amp; Found</text>
+</svg>

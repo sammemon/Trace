@@ -1,0 +1,37 @@
+# render.yaml - Render deployment configuration for TRACE Backend
+services:
+  - type: web
+    name: trace-api
+    env: docker
+    region: oregon
+    branch: main
+    dockerfile: ./Dockerfile.api
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        required: true
+      - key: DIRECT_URL
+        required: true
+      - key: JWT_ACCESS_SECRET
+        required: true
+      - key: PRIVATE_DATA_KEY
+        required: true
+      - key: STUDENT_ID_HMAC_SECRET
+        required: true
+      - key: ALLOWED_EMAIL_DOMAINS
+        value: students.muet.edu.pk,faculty.muet.edu.pk,admin.muet.edu.pk,hod.muet.edu.pk
+      - key: UNIVERSITY_NAME
+        value: Mehran University (MUET)
+      - key: UNIVERSITY_TIMEZONE
+        value: Asia/Karachi
+      - key: CAMPUS_CENTER_LAT
+        value: 24.8607
+      - key: CAMPUS_CENTER_LNG
+        value: 67.0011
+      - key: REDIS_URL
+        value: redis://localhost:6379
+    healthCheckPath: /api/v1/health

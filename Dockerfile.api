@@ -1,0 +1,28 @@
+# Dockerfile for TRACE Backend (NestJS)
+# Deploy to Render/Railway free tier
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+# Copy source code
+COPY apps/api ./apps/api
+COPY packages/shared ./packages/shared
+
+# Build TypeScript
+WORKDIR /app/apps/api
+RUN pnpm install --frozen-lockfile
+RUN npx tsc --noEmit
+
+# Prisma generate
+RUN npx prisma generate
+
+# Expose port
+EXPOSE 3000
+
+# Start the backend
+CMD ["pnpm", "start:prod"]
