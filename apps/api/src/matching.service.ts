@@ -16,7 +16,7 @@ export class MatchingService {
     }
     const opposite = item.type === 'LOST' ? 'FOUND' : 'LOST';
     const candidates = await this.prisma.item.findMany({ where: { type: opposite, status: { in: ['ACTIVE', 'CLAIM_PENDING'] }, moderationStatus: 'VISIBLE', categoryId: item.categoryId }, include: { location: true } });
-    const matches = [];
+    const matches: any[] = [];
     for (const candidate of candidates) {
       const lost = item.type === 'LOST' ? item : candidate;
       const found = item.type === 'FOUND' ? item : candidate;
