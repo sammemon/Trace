@@ -4,6 +4,11 @@ interface Toast {
   type: 'success' | 'error' | 'warning' | 'info';
   message: string;
 }
+function generateId(): string {
+  return (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+}
 interface ToastContextValue {
   toasts: Toast[];
   showToast: (message: string, type?: Toast['type']) => void;
@@ -14,7 +19,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const showToast = useCallback(
     (message: string, type: Toast['type'] = 'info') => {
-      const id = crypto.randomUUID();
+      const id = generateId();
       setToasts((prev) => [...prev, { id, type, message }]);
       setTimeout(
         () => setToasts((prev) => prev.filter((t) => t.id !== id)),
